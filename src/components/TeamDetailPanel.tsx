@@ -11,10 +11,11 @@ interface TeamDetailPanelProps {
   rankedTeams: TeamWithAvg[];
   tracks: string[];
   onDeleteScore: (scoreId: string) => void;
+  onDeleteTeam: (teamId: string) => void;
   onChangeTrack: (teamId: string, newTrack: string) => void | Promise<void>;
 }
 
-export default function TeamDetailPanel({ rankedTeams, tracks, onDeleteScore, onChangeTrack }: TeamDetailPanelProps) {
+export default function TeamDetailPanel({ rankedTeams, tracks, onDeleteScore, onDeleteTeam, onChangeTrack }: TeamDetailPanelProps) {
   const [selectedId, setSelectedId] = useState(rankedTeams[0]?.id || '');
   const [changingTrack, setChangingTrack] = useState(false);
 
@@ -35,15 +36,24 @@ export default function TeamDetailPanel({ rankedTeams, tracks, onDeleteScore, on
     <div>
       <div className="bg-bg-card border border-border rounded-[14px] shadow-sm p-5 mb-5">
         <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider block mb-2">Select Team</label>
-        <Select
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-          className="w-full px-4 py-3 border border-border rounded-lg bg-bg-input text-base font-semibold focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta-light transition-all"
-        >
-          {rankedTeams.map((t) => (
-            <option key={t.id} value={t.id}>{t.name} ({t.track})</option>
-          ))}
-        </Select>
+        <div className="flex gap-2 items-center">
+          <Select
+            wrapperClassName="flex-1"
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
+            className="w-full px-4 py-3 border border-border rounded-lg bg-bg-input text-base font-semibold focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta-light transition-all"
+          >
+            {rankedTeams.map((t) => (
+              <option key={t.id} value={t.id}>{t.name} ({t.track})</option>
+            ))}
+          </Select>
+          <button
+            onClick={() => onDeleteTeam(team.id)}
+            className="border border-red/30 text-red text-xs font-semibold px-4 py-3 rounded-lg hover:bg-bg-red transition-colors whitespace-nowrap"
+          >
+            Delete Team
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 mb-5 px-1 flex-wrap">
@@ -139,7 +149,7 @@ export default function TeamDetailPanel({ rankedTeams, tracks, onDeleteScore, on
             team.scores.map((s) => {
               const total = s.impact + s.technical + s.ethics + s.presentation;
               return (
-                <div key={s.id} className="grid grid-cols-[120px_1fr_1fr_1fr_1fr_80px_auto] gap-2.5 px-3 py-2.5 bg-bg rounded-lg mb-2 items-center">
+                <div key={s.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-2.5 px-3 py-2.5 bg-bg rounded-lg mb-2 items-center">
                   <div className="font-semibold text-xs">{s.judge_name}</div>
                   <div className="font-mono text-xs text-center">
                     <span className="block text-[9px] text-text-muted">Impact</span>{s.impact}/25
@@ -153,10 +163,12 @@ export default function TeamDetailPanel({ rankedTeams, tracks, onDeleteScore, on
                   <div className="font-mono text-xs text-center">
                     <span className="block text-[9px] text-text-muted">Presentation</span>{s.presentation}/20
                   </div>
-                  <div className="font-mono text-sm font-bold text-terracotta text-right">{total}/100</div>
+                  <div className="font-mono text-sm font-bold text-terracotta text-center">
+                    <span className="block text-[9px] text-text-muted">Total</span>{total}/100
+                  </div>
                   <button
                     onClick={() => onDeleteScore(s.id)}
-                    className="border border-red/30 text-red text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-bg transition-colors"
+                    className="border border-red/30 text-red text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-bg-red transition-colors"
                   >
                     Delete
                   </button>

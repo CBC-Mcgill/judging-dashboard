@@ -69,7 +69,7 @@ export default function Header({ activeTab, onTabChange, dashboardName, onExport
           </button>
           <button
             onClick={handleSignOut}
-            className="border border-border px-3.5 py-1.5 rounded-lg text-xs font-semibold text-text-muted hover:bg-bg-warm transition-colors"
+            className="border border-border px-3.5 py-1.5 rounded-lg text-xs font-semibold text-text-secondary hover:bg-bg-red transition-colors"
           >
             Sign Out
           </button>

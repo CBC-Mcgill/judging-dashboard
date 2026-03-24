@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { Dashboard } from '@/types';
 import TrackEditor from './TrackEditor';
+import ConfirmModal from './ConfirmModal';
 
 interface SettingsPanelProps {
   dashboard: Dashboard;
@@ -18,11 +19,12 @@ export default function SettingsPanel({ dashboard, isOwner, onUpdate }: Settings
   const [awards, setAwards] = useState<string[]>(dashboard.awards);
   const [savingField, setSavingField] = useState<'tracks' | 'awards' | null>(null);
   const [successField, setSuccessField] = useState<'tracks' | 'awards' | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   async function deleteDashboard() {
-    if (!confirm(`Delete "${dashboard.name}"? This will permanently delete all teams, scores, and collaborators. This cannot be undone.`)) return;
     const supabase = createClient();
     const { error } = await supabase.from('dashboards').delete().eq('id', dashboard.id);
+    setShowDeleteConfirm(false);
     if (error) { alert(error.message); return; }
     router.push('/dashboard');
   }
@@ -143,13 +145,21 @@ export default function SettingsPanel({ dashboard, isOwner, onUpdate }: Settings
             <p className="text-xs text-text-muted mt-0.5">Permanently delete this dashboard and all its data</p>
           </div>
           <button
-            onClick={deleteDashboard}
-            className="border border-red/30 text-red text-xs font-semibold px-4 py-2 rounded-lg hover:bg-red-bg transition-colors"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="border border-red/30 text-red text-xs font-semibold px-4 py-2 rounded-lg hover:bg-bg-red transition-colors"
           >
             Delete Dashboard
           </button>
         </div>
       </div>
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title="Delete Dashboard"
+        message={`Permanently delete "${dashboard.name}"? All teams, scores, and collaborators will be lost. This cannot be undone.`}
+        confirmLabel="Delete Dashboard"
+        onConfirm={deleteDashboard}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

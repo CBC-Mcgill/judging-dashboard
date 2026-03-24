@@ -133,7 +133,7 @@ export default function CollaboratorPanel({ dashboardId, isOwner }: Collaborator
               </button>
             </div>
             {error && (
-              <div className="mt-3 bg-red-bg border border-red/20 text-red text-sm px-4 py-2 rounded-lg">
+              <div className="mt-3 bg-bg-red border border-red/20 text-red text-sm px-4 py-2 rounded-lg">
                 {error}
               </div>
             )}
