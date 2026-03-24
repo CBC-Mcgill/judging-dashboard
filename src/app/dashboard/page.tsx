@@ -7,6 +7,7 @@ import { DEFAULT_TRACKS, DEFAULT_AWARDS } from '@/lib/scoring';
 import type { Dashboard, PendingInvite } from '@/types';
 import TrackEditor from '@/components/TrackEditor';
 import { ClipboardList, X, Mail, Check } from 'lucide-react';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function DashboardListPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function DashboardListPage() {
   const [newDesc, setNewDesc] = useState('');
   const [newTracks, setNewTracks] = useState<string[]>([...DEFAULT_TRACKS]);
   const [newAwards, setNewAwards] = useState<string[]>([...DEFAULT_AWARDS]);
+  const [leaveConfirm, setLeaveConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboards();
@@ -78,7 +80,6 @@ export default function DashboardListPage() {
   }
 
   async function leaveDashboard(dashboardId: string) {
-    if (!confirm('Leave this dashboard? You will lose access.')) return;
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -87,6 +88,7 @@ export default function DashboardListPage() {
       .delete()
       .eq('dashboard_id', dashboardId)
       .eq('user_id', user.id);
+    setLeaveConfirm(null);
     if (error) { alert(error.message); return; }
     loadDashboards();
   }
@@ -165,7 +167,7 @@ export default function DashboardListPage() {
             </button>
             <button
               onClick={handleSignOut}
-              className="border border-border px-3.5 py-1.5 rounded-lg text-xs font-semibold text-text-muted hover:bg-bg-warm transition-colors"
+              className="border border-border px-3.5 py-1.5 rounded-lg text-xs font-semibold text-text-muted hover:bg-bg-red transition-colors"
             >
               Sign Out
             </button>
@@ -349,7 +351,7 @@ export default function DashboardListPage() {
                     <div className="flex items-center gap-3">
                       <span className="text-text-muted text-xs">{new Date(d.created_at).toLocaleDateString()}</span>
                       <button
-                        onClick={(e) => { e.stopPropagation(); leaveDashboard(d.id); }}
+                        onClick={(e) => { e.stopPropagation(); setLeaveConfirm(d.id); }}
                         className="text-xs text-red hover:underline"
                       >
                         Leave
@@ -362,6 +364,14 @@ export default function DashboardListPage() {
           </div>
         )}
       </div>
+      <ConfirmModal
+        open={!!leaveConfirm}
+        title="Leave Dashboard"
+        message="Leave this dashboard? You will lose access and need to be re-invited."
+        confirmLabel="Leave"
+        onConfirm={() => leaveConfirm && leaveDashboard(leaveConfirm)}
+        onCancel={() => setLeaveConfirm(null)}
+      />
     </div>
   );
 }

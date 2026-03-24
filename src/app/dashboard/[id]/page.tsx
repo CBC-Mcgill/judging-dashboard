@@ -12,6 +12,7 @@ import RankingsPanel from '@/components/RankingsPanel';
 import TeamDetailPanel from '@/components/TeamDetailPanel';
 import CollaboratorPanel from '@/components/CollaboratorPanel';
 import SettingsPanel from '@/components/SettingsPanel';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function DashboardPage() {
   const params = useParams();
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('entry');
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
   const loadData = useCallback(async () => {
     const supabase = createClient();
@@ -123,12 +125,34 @@ export default function DashboardPage() {
     loadData();
   }
 
-  async function handleDeleteScore(scoreId: string) {
-    if (!confirm('Delete this score?')) return;
-    const supabase = createClient();
-    const { error } = await supabase.from('scores').delete().eq('id', scoreId);
-    if (error) { alert(error.message); return; }
-    loadData();
+  function handleDeleteTeam(teamId: string) {
+    const team = teams.find((t) => t.id === teamId);
+    setConfirmAction({
+      title: 'Delete Team',
+      message: `Delete "${team?.name}"? All scores for this team will be deleted.`,
+      onConfirm: async () => {
+        const supabase = createClient();
+        const { error } = await supabase.from('teams').delete().eq('id', teamId);
+        setConfirmAction(null);
+        if (error) { alert(error.message); return; }
+        loadData();
+      },
+    });
+  }
+
+  function handleDeleteScore(scoreId: string) {
+    const score = scores.find((s) => s.id === scoreId);
+    setConfirmAction({
+      title: 'Delete Score',
+      message: `Delete the score from ${score?.judge_name || 'this judge'}? This cannot be undone.`,
+      onConfirm: async () => {
+        const supabase = createClient();
+        const { error } = await supabase.from('scores').delete().eq('id', scoreId);
+        setConfirmAction(null);
+        if (error) { alert(error.message); return; }
+        loadData();
+      },
+    });
   }
 
   function handleExport() {
@@ -202,7 +226,7 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'detail' && (
-          <TeamDetailPanel rankedTeams={rankedTeams} tracks={dashboard.tracks} onDeleteScore={handleDeleteScore} onChangeTrack={handleChangeTrack} />
+          <TeamDetailPanel rankedTeams={rankedTeams} tracks={dashboard.tracks} onDeleteScore={handleDeleteScore} onDeleteTeam={handleDeleteTeam} onChangeTrack={handleChangeTrack} />
         )}
 
         {activeTab === 'collaborate' && (
@@ -213,6 +237,13 @@ export default function DashboardPage() {
           <SettingsPanel dashboard={dashboard} isOwner={isOwner} onUpdate={loadData} />
         )}
       </div>
+      <ConfirmModal
+        open={!!confirmAction}
+        title={confirmAction?.title || ''}
+        message={confirmAction?.message || ''}
+        onConfirm={confirmAction?.onConfirm || (() => {})}
+        onCancel={() => setConfirmAction(null)}
+      />
     </div>
   );
 }
