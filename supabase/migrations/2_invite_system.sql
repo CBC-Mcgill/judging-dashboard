@@ -97,6 +97,50 @@ returns table(user_id uuid, email text, role text) as $$
 $$ language sql security definer;
 
 -- ============================================
+-- Judge invite RPCs
+-- ============================================
+
+create or replace function accept_judge_invite(judge_id uuid)
+returns void as $$
+declare
+  j record;
+  my_email text;
+begin
+  my_email := lower(auth.jwt()->>'email');
+  select * into j from dashboard_judges where id = judge_id;
+  if j is null then raise exception 'Invite not found'; end if;
+  if lower(j.email) != my_email then raise exception 'This invite is not for you'; end if;
+  update dashboard_judges set
+    user_id = auth.uid(),
+    name = coalesce((select raw_user_meta_data->>'full_name' from auth.users where id = auth.uid()), j.name)
+  where id = judge_id;
+end;
+$$ language plpgsql security definer;
+
+create or replace function decline_judge_invite(judge_id uuid)
+returns void as $$
+declare
+  j record;
+  my_email text;
+begin
+  my_email := lower(auth.jwt()->>'email');
+  select * into j from dashboard_judges where id = judge_id;
+  if j is null then raise exception 'Invite not found'; end if;
+  if lower(j.email) != my_email then raise exception 'This invite is not for you'; end if;
+  delete from dashboard_judges where id = judge_id;
+end;
+$$ language plpgsql security definer;
+
+create or replace function get_my_judge_invites()
+returns table(id uuid, dashboard_id uuid, dashboard_name text, email text, name text, created_at timestamptz) as $$
+  select j.id, j.dashboard_id, d.name as dashboard_name, j.email, j.name, j.created_at
+  from dashboard_judges j
+  join dashboards d on d.id = j.dashboard_id
+  where lower(j.email) = lower(auth.jwt()->>'email')
+    and j.user_id is null;
+$$ language sql security definer;
+
+-- ============================================
 -- RLS for pending_invites
 -- ============================================
 
