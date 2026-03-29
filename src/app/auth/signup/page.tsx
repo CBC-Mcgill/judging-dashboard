@@ -39,9 +39,7 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-full max-w-sm px-6">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-terracotta rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-serif text-xl">C</span>
-          </div>
+          <img src="/icon.svg" alt="Logo" className="w-12 h-12 mx-auto mb-4" />
           <h1 className="font-serif text-2xl">Create Account</h1>
         </div>
 

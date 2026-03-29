@@ -10,7 +10,7 @@ export default function Select({ className = '', wrapperClassName = '', children
     <div className={`relative ${wrapperClassName}`}>
       <select
         {...props}
-        className={`appearance-none pr-10 ${className}`}
+        className={`appearance-none pr-10 text-base md:text-sm ${className}`}
       >
         {children}
       </select>

@@ -77,7 +77,7 @@ export default function RadarChart({ data }: RadarChartProps) {
   }
 
   return (
-    <svg viewBox="0 0 400 340" className="w-[340px] h-[300px]">
+    <svg viewBox="0 0 400 340" className="w-full max-w-[340px] h-auto">
       {rings}
       {axes}
       {dataPolygon}

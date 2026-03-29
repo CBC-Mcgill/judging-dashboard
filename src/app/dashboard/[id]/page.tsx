@@ -3,15 +3,18 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { buildRankedTeams } from '@/lib/scoring';
-import type { Dashboard, Team, Score } from '@/types';
+import { buildRankedTeams, computeTotal, getCriteriaMaxes } from '@/lib/scoring';
+import type { Dashboard, DashboardJudge, Team, Score, UserRole } from '@/types';
 import Header from '@/components/Header';
 import StatsStrip from '@/components/StatsStrip';
 import ScoreEntryPanel from '@/components/ScoreEntryPanel';
 import RankingsPanel from '@/components/RankingsPanel';
 import TeamDetailPanel from '@/components/TeamDetailPanel';
 import CollaboratorPanel from '@/components/CollaboratorPanel';
+import JudgesPanel from '@/components/JudgesPanel';
 import SettingsPanel from '@/components/SettingsPanel';
+import JudgeOnboarding from '@/components/JudgeOnboarding';
+import JudgeSettings from '@/components/JudgeSettings';
 import ConfirmModal from '@/components/ConfirmModal';
 
 export default function DashboardPage() {
@@ -21,9 +24,11 @@ export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [scores, setScores] = useState<Score[]>([]);
-  const [activeTab, setActiveTab] = useState('entry');
+  const [judges, setJudges] = useState<DashboardJudge[]>([]);
+  const [activeTab, setActiveTab] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>(null);
   const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
   const loadData = useCallback(async () => {
@@ -31,44 +36,64 @@ export default function DashboardPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setCurrentUserId(user.id);
 
-    const [dashRes, teamsRes, scoresRes] = await Promise.all([
+    const [dashRes, teamsRes, scoresRes, judgesRes] = await Promise.all([
       supabase.from('dashboards').select('*').eq('id', dashboardId).single(),
       supabase.from('teams').select('*').eq('dashboard_id', dashboardId).order('created_at'),
       supabase.from('scores').select('*').eq('dashboard_id', dashboardId).order('created_at'),
+      supabase.from('dashboard_judges').select('*').eq('dashboard_id', dashboardId).order('created_at'),
     ]);
 
     if (dashRes.data) setDashboard(dashRes.data);
     if (teamsRes.data) setTeams(teamsRes.data);
     if (scoresRes.data) setScores(scoresRes.data);
+    if (judgesRes.data) setJudges(judgesRes.data);
+
+    // Determine role
+    if (user && dashRes.data) {
+      if (dashRes.data.owner_id === user.id) {
+        setUserRole('owner');
+        if (!activeTab) setActiveTab('entry');
+      } else {
+        // Check if collaborator
+        const { data: collab } = await supabase
+          .from('dashboard_collaborators')
+          .select('id')
+          .eq('dashboard_id', dashboardId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (collab) {
+          setUserRole('collaborator');
+          if (!activeTab) setActiveTab('entry');
+        } else {
+          // Must be a judge
+          setUserRole('judge');
+          if (!activeTab) setActiveTab('onboarding');
+        }
+      }
+    }
+
     setLoading(false);
-  }, [dashboardId]);
+  }, [dashboardId, activeTab]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  // Real-time subscriptions
   useEffect(() => {
     const supabase = createClient();
-
     const channel = supabase
       .channel(`dashboard-${dashboardId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `dashboard_id=eq.${dashboardId}` },
-        () => loadData()
-      )
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'scores', filter: `dashboard_id=eq.${dashboardId}` },
-        () => loadData()
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `dashboard_id=eq.${dashboardId}` }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'scores', filter: `dashboard_id=eq.${dashboardId}` }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dashboard_judges', filter: `dashboard_id=eq.${dashboardId}` }, () => loadData())
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [dashboardId, loadData]);
 
+  const isStaff = userRole === 'owner' || userRole === 'collaborator';
+  const currentJudge = judges.find((j) => j.user_id === currentUserId) || null;
+
   async function handleAddTeam(name: string, track: string) {
     const supabase = createClient();
-    const { error } = await supabase
-      .from('teams')
-      .insert({ dashboard_id: dashboardId, name, track });
+    const { error } = await supabase.from('teams').insert({ dashboard_id: dashboardId, name, track });
     if (error) { alert(error.message); return; }
     loadData();
   }
@@ -76,25 +101,18 @@ export default function DashboardPage() {
   async function handleSubmitScore(score: {
     teamId: string;
     judgeName: string;
-    impact: number;
-    technical: number;
-    ethics: number;
-    presentation: number;
+    categoryScores: Record<string, number>;
     selectedAwards: string[];
   }) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     const scoreData = {
-      impact: score.impact,
-      technical: score.technical,
-      ethics: score.ethics,
-      presentation: score.presentation,
+      category_scores: score.categoryScores,
       selected_awards: score.selectedAwards,
       scored_by: user?.id,
     };
 
-    // Check if this judge already scored this team — overwrite if so
     const { data: existing } = await supabase
       .from('scores')
       .select('id')
@@ -157,20 +175,23 @@ export default function DashboardPage() {
 
   function handleExport() {
     if (!dashboard) return;
-    const rankedTeams = buildRankedTeams(teams, scores);
+    const criteria = dashboard.criteria || [];
+    const rankedTeams = buildRankedTeams(teams, scores, criteria);
     const awardNames = dashboard.awards || [];
+    const maxes = getCriteriaMaxes(criteria);
     const rows = [
-      ['Team', 'Track', 'Judge', 'Impact (/25)', 'Technical (/30)', 'Ethics (/25)', 'Presentation (/20)', 'Total (/100)', ...awardNames],
+      ['Team', 'Track', 'Judge', ...criteria.map((c) => `${c.name} (/${maxes.get(c.name) || 0})`), 'Total (/100)', ...awardNames],
     ];
     for (const team of rankedTeams) {
       if (team.scores.length === 0) {
-        rows.push([team.name, team.track, '', '', '', '', '', '', ...awardNames.map(() => '')]);
+        rows.push([team.name, team.track, '', ...criteria.map(() => ''), '', ...awardNames.map(() => '')]);
       } else {
         for (const s of team.scores) {
-          const total = s.impact + s.technical + s.ethics + s.presentation;
+          const total = computeTotal(s.category_scores || {}, criteria);
           rows.push([
             team.name, team.track, s.judge_name,
-            String(s.impact), String(s.technical), String(s.ethics), String(s.presentation), String(total),
+            ...criteria.map((c) => String(s.category_scores?.[c.name] ?? '')),
+            total.toFixed(1),
             ...awardNames.map((a) => s.selected_awards?.includes(a) ? 'Yes' : ''),
           ]);
         }
@@ -201,40 +222,63 @@ export default function DashboardPage() {
     );
   }
 
-  const rankedTeams = buildRankedTeams(teams, scores);
+  const criteria = dashboard.criteria || [];
+  const rankedTeams = buildRankedTeams(teams, scores, criteria);
   const isOwner = currentUserId === dashboard.owner_id;
 
   return (
     <div className="min-h-screen">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} dashboardName={dashboard.name} onExport={handleExport} />
-      <div className="max-w-[1200px] mx-auto py-7 px-8">
-        <StatsStrip teams={teams} scores={scores} />
+      <Header
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        dashboardName={dashboard.name}
+        onExport={isStaff ? handleExport : undefined}
+        userRole={userRole}
+      />
+      <div className={`max-w-[1200px] mx-auto py-5 px-4 md:py-7 md:px-8 ${userRole === 'judge' ? 'pb-20 md:pb-7' : ''}`}>
+        {isStaff && <StatsStrip teams={teams} scores={scores} criteria={criteria} />}
 
         {activeTab === 'entry' && (
           <ScoreEntryPanel
             teams={teams}
             scores={scores}
             tracks={dashboard.tracks}
+            criteria={criteria}
             availableAwards={dashboard.awards}
+            judges={judges}
+            userRole={userRole}
+            currentJudge={currentJudge}
             onAddTeam={handleAddTeam}
             onSubmitScore={handleSubmitScore}
           />
         )}
 
-        {activeTab === 'rankings' && (
-          <RankingsPanel rankedTeams={rankedTeams} tracks={dashboard.tracks} />
+        {activeTab === 'rankings' && isStaff && (
+          <RankingsPanel rankedTeams={rankedTeams} tracks={dashboard.tracks} criteria={criteria} />
         )}
 
-        {activeTab === 'detail' && (
-          <TeamDetailPanel rankedTeams={rankedTeams} tracks={dashboard.tracks} onDeleteScore={handleDeleteScore} onDeleteTeam={handleDeleteTeam} onChangeTrack={handleChangeTrack} />
+        {activeTab === 'detail' && isStaff && (
+          <TeamDetailPanel rankedTeams={rankedTeams} tracks={dashboard.tracks} criteria={criteria} onDeleteScore={handleDeleteScore} onDeleteTeam={handleDeleteTeam} onChangeTrack={handleChangeTrack} />
         )}
 
-        {activeTab === 'collaborate' && (
+        {activeTab === 'collaborate' && isStaff && (
           <CollaboratorPanel dashboardId={dashboardId} isOwner={isOwner} />
         )}
 
-        {activeTab === 'settings' && (
+        {activeTab === 'judges' && isStaff && (
+          <JudgesPanel dashboardId={dashboardId} isStaff={isStaff} />
+        )}
+
+        {activeTab === 'settings' && isStaff && (
           <SettingsPanel dashboard={dashboard} isOwner={isOwner} onUpdate={loadData} />
+        )}
+
+        {activeTab === 'onboarding' && userRole === 'judge' && (
+          <JudgeOnboarding dashboard={dashboard} judgeName={currentJudge?.name || 'Judge'} />
+        )}
+
+        {activeTab === 'judge-settings' && userRole === 'judge' && currentJudge && (
+          <JudgeSettings judge={currentJudge} />
         )}
       </div>
       <ConfirmModal

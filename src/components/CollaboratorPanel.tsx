@@ -116,7 +116,7 @@ export default function CollaboratorPanel({ dashboardId, isOwner }: Collaborator
             </p>
           </div>
           <div className="p-[22px]">
-            <div className="flex gap-2">
+            <div className="flex flex-col md:flex-row gap-2">
               <input
                 type="email"
                 value={inviteEmail}
@@ -127,7 +127,7 @@ export default function CollaboratorPanel({ dashboardId, isOwner }: Collaborator
               />
               <button
                 onClick={handleInvite}
-                className="bg-terracotta text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-terracotta/90 transition-colors"
+                className="bg-terracotta text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-terracotta/90 transition-colors w-full md:w-auto"
               >
                 Invite
               </button>

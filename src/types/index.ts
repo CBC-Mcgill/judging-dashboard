@@ -5,6 +5,11 @@ export interface User {
   created_at: string;
 }
 
+export interface Criterion {
+  name: string;
+  weight: number;
+}
+
 export interface Dashboard {
   id: string;
   name: string;
@@ -12,6 +17,7 @@ export interface Dashboard {
   owner_id: string;
   tracks: string[];
   awards: string[];
+  criteria: Criterion[];
   created_at: string;
   updated_at: string;
 }
@@ -38,11 +44,8 @@ export interface Score {
   dashboard_id: string;
   team_id: string;
   judge_name: string;
-  scored_by: string; // user id of person entering scores
-  impact: number;
-  technical: number;
-  ethics: number;
-  presentation: number;
+  scored_by: string;
+  category_scores: Record<string, number>;
   selected_awards: string[];
   created_at: string;
 }
@@ -62,12 +65,30 @@ export interface CollaboratorWithEmail {
   role: string;
 }
 
+export interface DashboardJudge {
+  id: string;
+  dashboard_id: string;
+  user_id: string | null;
+  email: string;
+  name: string;
+  invited_by: string;
+  created_at: string;
+}
+
+export interface JudgeInvite {
+  id: string;
+  dashboard_id: string;
+  dashboard_name: string;
+  email: string;
+  name: string;
+  created_at: string;
+}
+
+export type UserRole = 'owner' | 'collaborator' | 'judge' | null;
+
 export interface TeamWithAvg extends Team {
   avg: {
-    impact: number;
-    technical: number;
-    ethics: number;
-    presentation: number;
+    categories: Record<string, number>;
     total: number;
     count: number;
   };

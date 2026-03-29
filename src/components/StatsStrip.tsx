@@ -1,15 +1,16 @@
-import type { Team, Score } from '@/types';
+import type { Criterion, Team, Score } from '@/types';
 import { computeTeamAvg } from '@/lib/scoring';
 
 interface StatsStripProps {
   teams: Team[];
   scores: Score[];
+  criteria: Criterion[];
 }
 
-export default function StatsStrip({ teams, scores }: StatsStripProps) {
+export default function StatsStrip({ teams, scores, criteria }: StatsStripProps) {
   const judged = teams.filter((t) => scores.some((s) => s.team_id === t.id)).length;
   const avgs = teams
-    .map((t) => computeTeamAvg(scores.filter((s) => s.team_id === t.id)))
+    .map((t) => computeTeamAvg(scores.filter((s) => s.team_id === t.id), criteria))
     .filter((a) => a.count > 0);
   const overallAvg = avgs.length > 0
     ? (avgs.reduce((s, a) => s + a.total, 0) / avgs.length).toFixed(1)
@@ -23,13 +24,13 @@ export default function StatsStrip({ teams, scores }: StatsStripProps) {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
       {stats.map((s) => (
-        <div key={s.label} className="bg-bg-card border border-border rounded-[10px] px-5 py-4 shadow-sm">
+        <div key={s.label} className="bg-bg-card border border-border rounded-[10px] px-3 py-3 md:px-5 md:py-4 shadow-sm">
           <div className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1.5">
             {s.label}
           </div>
-          <div className={`font-mono text-[26px] font-semibold ${s.accent ? 'text-terracotta' : 'text-text'}`}>
+          <div className={`font-mono text-[22px] md:text-[26px] font-semibold ${s.accent ? 'text-terracotta' : 'text-text'}`}>
             {s.value}
           </div>
         </div>
