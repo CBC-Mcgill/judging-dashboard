@@ -10,7 +10,7 @@ interface ScoreEntryPanelProps {
   scores: Score[];
   tracks: string[];
   criteria: Criterion[];
-  availableAwards: string[];
+  availableSubchallenges: string[];
   judges: DashboardJudge[];
   userRole: UserRole;
   currentJudge?: DashboardJudge | null;
@@ -19,17 +19,17 @@ interface ScoreEntryPanelProps {
     teamId: string;
     judgeName: string;
     categoryScores: Record<string, number>;
-    selectedAwards: string[];
+    selectedSubchallenges: string[];
   }) => void;
 }
 
-export default function ScoreEntryPanel({ teams, scores, tracks, criteria, availableAwards, judges, userRole, currentJudge, onAddTeam, onSubmitScore }: ScoreEntryPanelProps) {
+export default function ScoreEntryPanel({ teams, scores, tracks, criteria, availableSubchallenges, judges, userRole, currentJudge, onAddTeam, onSubmitScore }: ScoreEntryPanelProps) {
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamTrack, setNewTeamTrack] = useState(tracks[0] || '');
   const [teamId, setTeamId] = useState(teams[0]?.id || '');
   const [selectedJudgeId, setSelectedJudgeId] = useState('');
   const [categoryInputs, setCategoryInputs] = useState<Record<string, string>>({});
-  const [selectedAwards, setSelectedAwards] = useState<Set<string>>(new Set());
+  const [selectedSubchallenges, setSelectedSubchallenges] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
   const [teamError, setTeamError] = useState('');
 
@@ -90,9 +90,9 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
       catScores[c.name] = v;
     }
 
-    onSubmitScore({ teamId, judgeName: judge.name, categoryScores: catScores, selectedAwards: Array.from(selectedAwards) });
+    onSubmitScore({ teamId, judgeName: judge.name, categoryScores: catScores, selectedSubchallenges: Array.from(selectedSubchallenges) });
     setCategoryInputs({});
-    setSelectedAwards(new Set());
+    setSelectedSubchallenges(new Set());
   }
 
   return (
@@ -197,26 +197,26 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
             <div className="h-px bg-border my-5" />
 
             {/* Subchallenges */}
-            {availableAwards.length > 0 && (
+            {availableSubchallenges.length > 0 && (
               <>
                 <div className="text-xs font-semibold text-text-secondary mb-2">Subchallenges</div>
                 <div className="flex gap-2 flex-wrap">
-                  {availableAwards.map((award) => (
+                  {availableSubchallenges.map((sc) => (
                     <button
-                      key={award}
-                      onClick={() => setSelectedAwards((prev) => {
+                      key={sc}
+                      onClick={() => setSelectedSubchallenges((prev) => {
                         const next = new Set(prev);
-                        if (next.has(award)) next.delete(award);
-                        else next.add(award);
+                        if (next.has(sc)) next.delete(sc);
+                        else next.add(sc);
                         return next;
                       })}
                       className={`flex-1 min-w-[100px] py-2.5 border rounded-lg text-center text-[11px] font-semibold transition-all flex flex-col items-center gap-1 ${
-                        selectedAwards.has(award)
+                        selectedSubchallenges.has(sc)
                           ? 'border-terracotta bg-terracotta-bg text-terracotta'
                           : 'border-border bg-bg-input text-text-muted hover:border-border-active'
                       }`}
                     >
-                      {award}
+                      {sc}
                     </button>
                   ))}
                 </div>
@@ -227,7 +227,7 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
             <div className="text-center bg-terracotta-bg rounded-[10px] p-6 mt-5">
               <div className="text-xs font-semibold text-terracotta uppercase tracking-wider mb-1">Total Score</div>
               <div className="font-mono text-[42px] font-semibold text-terracotta">
-                {total.toFixed(1)}<span className="text-xs md:text-sm text-text-muted"> / 100</span>
+                {Math.round(total)}<span className="text-xs md:text-sm text-text-muted"> / 100</span>
               </div>
             </div>
 
@@ -267,7 +267,7 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
                     <div className="font-semibold text-[13px]">{team?.name || '?'}</div>
                     <div className="text-[11px] text-text-muted">{s.judge_name}</div>
                   </div>
-                  <div className="font-mono font-semibold text-[15px] text-terracotta">{scoreTotal.toFixed(1)}</div>
+                  <div className="font-mono font-semibold text-[15px] text-terracotta">{Math.round(scoreTotal)}</div>
                 </div>
               );
             })

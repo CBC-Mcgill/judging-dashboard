@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import type { Criterion, Dashboard } from '@/types';
+import type { Criterion, Dashboard, Team, Score } from '@/types';
 import TrackEditor from './TrackEditor';
 import CriteriaEditor from './CriteriaEditor';
 import ConfirmModal from './ConfirmModal';
@@ -13,18 +13,23 @@ interface SettingsPanelProps {
   dashboard: Dashboard;
   isOwner: boolean;
   onUpdate: () => void;
+  teams: Team[];
+  scores: Score[];
 }
 
 type SettingsField = 'tracks' | 'awards' | 'criteria';
 
-export default function SettingsPanel({ dashboard, isOwner, onUpdate }: SettingsPanelProps) {
+export default function SettingsPanel({ dashboard, isOwner, onUpdate, teams, scores }: SettingsPanelProps) {
   const router = useRouter();
   const [tracks, setTracks] = useState<string[]>(dashboard.tracks);
-  const [awards, setAwards] = useState<string[]>(dashboard.awards);
+  const [subchallenges, setSubchallenges] = useState<string[]>(dashboard.awards);
   const [criteria, setCriteria] = useState<Criterion[]>(dashboard.criteria);
   const [savingField, setSavingField] = useState<SettingsField | null>(null);
   const [successField, setSuccessField] = useState<SettingsField | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const tracksInUse = new Set(teams.map((t) => t.track));
+  const subchallengesInUse = new Set(scores.flatMap((s) => s.selected_awards || []));
 
   async function deleteDashboard() {
     const supabase = createClient();
@@ -36,7 +41,7 @@ export default function SettingsPanel({ dashboard, isOwner, onUpdate }: Settings
 
   async function saveField(field: SettingsField, value: string[] | Criterion[]) {
     if (field === 'tracks') setTracks(value as string[]);
-    else if (field === 'awards') setAwards(value as string[]);
+    else if (field === 'awards') setSubchallenges(value as string[]);
     else setCriteria(value as Criterion[]);
 
     setSavingField(field);
@@ -51,7 +56,7 @@ export default function SettingsPanel({ dashboard, isOwner, onUpdate }: Settings
     if (error) {
       alert(error.message);
       if (field === 'tracks') setTracks(dashboard.tracks);
-      else if (field === 'awards') setAwards(dashboard.awards);
+      else if (field === 'awards') setSubchallenges(dashboard.awards);
       else setCriteria(dashboard.criteria);
     } else {
       setSuccessField(field);
@@ -100,8 +105,8 @@ export default function SettingsPanel({ dashboard, isOwner, onUpdate }: Settings
             </div>
             <div className="p-[22px]">
               <div className="space-y-1.5">
-                {awards.map((award, i) => (
-                  <div key={i} className="px-3 py-1.5 bg-bg-warm rounded-lg text-sm">{award}</div>
+                {subchallenges.map((sc, i) => (
+                  <div key={i} className="px-3 py-1.5 bg-bg-warm rounded-lg text-sm">{sc}</div>
                 ))}
               </div>
             </div>
@@ -152,6 +157,7 @@ export default function SettingsPanel({ dashboard, isOwner, onUpdate }: Settings
               placeholder="Add a track..."
               addLabel="Add"
               emptyText="No tracks added yet."
+              inUse={tracksInUse}
             />
           </div>
         </div>
@@ -165,11 +171,12 @@ export default function SettingsPanel({ dashboard, isOwner, onUpdate }: Settings
           </div>
           <div className="p-[22px]">
             <TrackEditor
-              tracks={awards}
+              tracks={subchallenges}
               onChange={(v) => saveField('awards', v)}
               placeholder="Add a subchallenge..."
               addLabel="Add"
               emptyText="No subchallenges yet."
+              inUse={subchallengesInUse}
             />
           </div>
         </div>

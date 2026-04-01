@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { DEFAULT_TRACKS, DEFAULT_AWARDS, DEFAULT_CRITERIA } from '@/lib/scoring';
+import { DEFAULT_TRACKS, DEFAULT_SUBCHALLENGES, DEFAULT_CRITERIA } from '@/lib/scoring';
 import type { Criterion, Dashboard, JudgeInvite, PendingInvite } from '@/types';
 import TrackEditor from '@/components/TrackEditor';
 import CriteriaEditor from '@/components/CriteriaEditor';
@@ -22,7 +22,7 @@ export default function DashboardListPage() {
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newTracks, setNewTracks] = useState<string[]>([...DEFAULT_TRACKS]);
-  const [newAwards, setNewAwards] = useState<string[]>([...DEFAULT_AWARDS]);
+  const [newSubchallenges, setNewSubchallenges] = useState<string[]>([...DEFAULT_SUBCHALLENGES]);
   const [newCriteria, setNewCriteria] = useState<Criterion[]>([...DEFAULT_CRITERIA]);
   const [createError, setCreateError] = useState('');
   const [leaveConfirm, setLeaveConfirm] = useState<string | null>(null);
@@ -151,7 +151,7 @@ export default function DashboardListPage() {
         description: newDesc.trim() || null,
         owner_id: user.id,
         tracks: newTracks,
-        awards: newAwards,
+        awards: newSubchallenges,
         criteria: newCriteria,
       });
 
@@ -259,7 +259,7 @@ export default function DashboardListPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-text-secondary block mb-1.5">Subchallenges</label>
-                  <TrackEditor tracks={newAwards} onChange={setNewAwards} placeholder="Add a subchallenge..." addLabel="Add" emptyText="No subchallenges yet." compact />
+                  <TrackEditor tracks={newSubchallenges} onChange={setNewSubchallenges} placeholder="Add a subchallenge..." addLabel="Add" emptyText="No subchallenges yet." compact />
                 </div>
               </div>
             </div>

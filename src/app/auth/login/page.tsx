@@ -15,6 +15,20 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+
+    if (!email && !password) {
+      setError('Email and password are required.');
+      return;
+    }
+    if (!email) {
+      setError('Email is required.');
+      return;
+    }
+    if (!password) {
+      setError('Password is required.');
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
@@ -49,7 +63,6 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-border rounded-lg bg-bg-input text-sm focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta-light transition-all"
-              required
             />
           </div>
           <div>
@@ -59,7 +72,6 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-border rounded-lg bg-bg-input text-sm focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta-light transition-all"
-              required
             />
           </div>
           <button

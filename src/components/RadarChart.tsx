@@ -40,12 +40,7 @@ export default function RadarChart({ data }: RadarChartProps) {
     return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#e8e2d9" strokeWidth={1} />;
   });
 
-  const labels = (data.length > 0 ? data : [
-    { label: 'Impact', value: 0, max: 25 },
-    { label: 'Technical', value: 0, max: 30 },
-    { label: 'Ethics', value: 0, max: 25 },
-    { label: 'Presentation', value: 0, max: 20 },
-  ]).map((d, i) => {
+  const labels = data.map((d, i) => {
     const p = polar(startAngle + i * angleStep, r + 30);
     return (
       <text

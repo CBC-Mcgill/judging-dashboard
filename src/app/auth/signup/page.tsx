@@ -16,10 +16,32 @@ export default function SignupPage() {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+
+    if (!fullName && !email && !password) {
+      setError('Full name, email, and password are required.');
+      return;
+    }
+    if (!fullName) {
+      setError('Full name is required.');
+      return;
+    }
+    if (!email) {
+      setError('Email is required.');
+      return;
+    }
+    if (!password) {
+      setError('Password is required.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -28,7 +50,14 @@ export default function SignupPage() {
     });
 
     if (error) {
-      setError(error.message);
+      if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists')) {
+        setError('An account with this email already exists.\nTry signing in instead.');
+      } else {
+        setError(error.message);
+      }
+      setLoading(false);
+    } else if (data.user && data.user.identities?.length === 0) {
+      setError('An account with this email already exists.\nTry signing in instead.');
       setLoading(false);
     } else {
       router.push('/dashboard');
@@ -45,7 +74,7 @@ export default function SignupPage() {
 
         <form onSubmit={handleSignup} className="space-y-4">
           {error && (
-            <div className="bg-bg-red border border-red/20 text-red text-sm px-4 py-3 rounded-lg">
+            <div className="bg-bg-red border border-red/20 text-red text-sm px-4 py-3 rounded-lg whitespace-pre-line">
               {error}
             </div>
           )}
@@ -56,7 +85,6 @@ export default function SignupPage() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-border rounded-lg bg-bg-input text-sm focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta-light transition-all"
-              required
             />
           </div>
           <div>
@@ -66,7 +94,6 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-border rounded-lg bg-bg-input text-sm focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta-light transition-all"
-              required
             />
           </div>
           <div>
@@ -75,9 +102,7 @@ export default function SignupPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              minLength={6}
               className="w-full px-3.5 py-2.5 border border-border rounded-lg bg-bg-input text-sm focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta-light transition-all"
-              required
             />
           </div>
           <button

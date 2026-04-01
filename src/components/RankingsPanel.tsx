@@ -66,11 +66,11 @@ export default function RankingsPanel({ rankedTeams, tracks, criteria }: Ranking
                   <div className="text-[11px] text-text-muted mt-0.5">
                     {team.track} &middot; {team.avg.count} judge{team.avg.count !== 1 ? 's' : ''}
                   </div>
-                  {team.activeAwards.length > 0 && (
+                  {team.activeSubchallenges.length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
-                      {team.activeAwards.map((award) => (
-                        <span key={award} className="inline-flex items-center text-[9px] font-semibold bg-terracotta-bg text-terracotta px-1.5 py-0.5 rounded-full">
-                          {award}
+                      {team.activeSubchallenges.map((sc) => (
+                        <span key={sc} className="inline-flex items-center text-[9px] font-semibold bg-terracotta-bg text-terracotta px-1.5 py-0.5 rounded-full">
+                          {sc}
                         </span>
                       ))}
                     </div>
@@ -102,11 +102,11 @@ export default function RankingsPanel({ rankedTeams, tracks, criteria }: Ranking
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-sm truncate">{team.name}</div>
                   <div className="text-[11px] text-text-muted">{team.track}</div>
-                  {team.activeAwards.length > 0 && (
+                  {team.activeSubchallenges.length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
-                      {team.activeAwards.map((award) => (
-                        <span key={award} className="inline-flex items-center text-[8px] font-semibold bg-terracotta-bg text-terracotta px-1.5 py-0.5 rounded-full">
-                          {award}
+                      {team.activeSubchallenges.map((sc) => (
+                        <span key={sc} className="inline-flex items-center text-[8px] font-semibold bg-terracotta-bg text-terracotta px-1.5 py-0.5 rounded-full">
+                          {sc}
                         </span>
                       ))}
                     </div>

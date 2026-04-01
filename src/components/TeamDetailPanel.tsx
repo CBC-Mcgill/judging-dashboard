@@ -73,12 +73,12 @@ export default function TeamDetailPanel({ rankedTeams, tracks, criteria, onDelet
           </Select>
           {changingTrack && <span className="text-xs text-text-muted">Changing...</span>}
         </div>
-        {team.activeAwards.length > 0 && (
+        {team.activeSubchallenges.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Subchallenges</span>
-            {team.activeAwards.map((award) => (
-              <span key={award} className="inline-flex items-center text-[10px] font-semibold bg-terracotta-bg text-terracotta px-2 py-1 rounded-full">
-                {award}
+            {team.activeSubchallenges.map((sc) => (
+              <span key={sc} className="inline-flex items-center text-[10px] font-semibold bg-terracotta-bg text-terracotta px-2 py-1 rounded-full">
+                {sc}
               </span>
             ))}
           </div>
@@ -93,14 +93,11 @@ export default function TeamDetailPanel({ rankedTeams, tracks, criteria, onDelet
           </div>
           <div className="p-[22px] flex justify-center items-center">
             <RadarChart
-              data={hasScores
-                ? criteria.map((c) => ({
-                    label: c.name,
-                    value: team.avg.categories[c.name] ?? 0,
-                    max: maxes.get(c.name) || 1,
-                  }))
-                : []
-              }
+              data={criteria.map((c) => ({
+                label: c.name,
+                value: hasScores ? (team.avg.categories[c.name] ?? 0) : 0,
+                max: maxes.get(c.name) || 1,
+              }))}
             />
           </div>
         </div>

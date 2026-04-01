@@ -101,7 +101,7 @@ export default function DashboardPage() {
     teamId: string;
     judgeName: string;
     categoryScores: Record<string, number>;
-    selectedAwards: string[];
+    selectedSubchallenges: string[];
   }) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -113,7 +113,7 @@ export default function DashboardPage() {
         team_id: score.teamId,
         judge_name: score.judgeName,
         category_scores: score.categoryScores,
-        selected_awards: score.selectedAwards,
+        selected_awards: score.selectedSubchallenges,
         scored_by: user?.id,
       }, {
         onConflict: 'dashboard_id,team_id,judge_name',
@@ -163,14 +163,14 @@ export default function DashboardPage() {
     if (!dashboard) return;
     const criteria = dashboard.criteria || [];
     const rankedTeams = buildRankedTeams(teams, scores, criteria);
-    const awardNames = dashboard.awards || [];
+    const subchallengeNames = dashboard.awards || [];
     const maxes = getCriteriaMaxes(criteria);
     const rows = [
-      ['Team', 'Track', 'Judge', ...criteria.map((c) => `${c.name} (/${maxes.get(c.name) || 0})`), 'Total (/100)', ...awardNames],
+      ['Team', 'Track', 'Judge', ...criteria.map((c) => `${c.name} (/${maxes.get(c.name) || 0})`), 'Total (/100)', ...subchallengeNames],
     ];
     for (const team of rankedTeams) {
       if (team.scores.length === 0) {
-        rows.push([team.name, team.track, '', ...criteria.map(() => ''), '', ...awardNames.map(() => '')]);
+        rows.push([team.name, team.track, '', ...criteria.map(() => ''), '', ...subchallengeNames.map(() => '')]);
       } else {
         for (const s of team.scores) {
           const total = computeTotal(s.category_scores || {}, criteria);
@@ -178,7 +178,7 @@ export default function DashboardPage() {
             team.name, team.track, s.judge_name,
             ...criteria.map((c) => String(s.category_scores?.[c.name] ?? '')),
             total.toFixed(1),
-            ...awardNames.map((a) => s.selected_awards?.includes(a) ? 'Yes' : ''),
+            ...subchallengeNames.map((a) => s.selected_awards?.includes(a) ? 'Yes' : ''),
           ]);
         }
       }
@@ -230,7 +230,7 @@ export default function DashboardPage() {
             scores={scores}
             tracks={dashboard.tracks}
             criteria={criteria}
-            availableAwards={dashboard.awards}
+            availableSubchallenges={dashboard.awards}
             judges={judges}
             userRole={userRole}
             currentJudge={currentJudge}
@@ -256,7 +256,7 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'settings' && isStaff && (
-          <SettingsPanel dashboard={dashboard} isOwner={isOwner} onUpdate={loadData} />
+          <SettingsPanel dashboard={dashboard} isOwner={isOwner} onUpdate={loadData} teams={teams} scores={scores} />
         )}
 
         {activeTab === 'onboarding' && userRole === 'judge' && (

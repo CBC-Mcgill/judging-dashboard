@@ -9,12 +9,14 @@ interface TrackEditorProps {
   addLabel?: string;
   emptyText?: string;
   compact?: boolean;
+  inUse?: Set<string>;
 }
 
-export default function TrackEditor({ tracks, onChange, placeholder = 'Add an item...', addLabel = 'Add', emptyText = 'No items added yet.', compact = false }: TrackEditorProps) {
+export default function TrackEditor({ tracks, onChange, placeholder = 'Add an item...', addLabel = 'Add', emptyText = 'No items added yet.', compact = false, inUse }: TrackEditorProps) {
   const [newTrack, setNewTrack] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [flashIndex, setFlashIndex] = useState<number | null>(null);
 
   function addTrack() {
     const name = newTrack.trim();
@@ -25,6 +27,11 @@ export default function TrackEditor({ tracks, onChange, placeholder = 'Add an it
   }
 
   function removeTrack(index: number) {
+    if (inUse?.has(tracks[index])) {
+      setFlashIndex(index);
+      setTimeout(() => setFlashIndex(null), 1500);
+      return;
+    }
     onChange(tracks.filter((_, i) => i !== index));
   }
 
@@ -66,7 +73,13 @@ export default function TrackEditor({ tracks, onChange, placeholder = 'Add an it
                 <>
                   <span className="flex-1 px-2 py-1 bg-bg-warm rounded text-xs">{track}</span>
                   <button onClick={() => startEdit(i)} className="text-[10px] font-semibold text-text-muted hover:underline">Edit</button>
-                  <button onClick={() => removeTrack(i)} className="text-[10px] font-semibold text-red hover:underline">Remove</button>
+                  <span className="w-10 text-center">
+                    {flashIndex === i ? (
+                      <span className="text-[10px] font-semibold text-red">In use</span>
+                    ) : (
+                      <button onClick={() => removeTrack(i)} className="text-[10px] font-semibold text-red hover:underline">Remove</button>
+                    )}
+                  </span>
                 </>
               )}
             </div>
@@ -96,7 +109,13 @@ export default function TrackEditor({ tracks, onChange, placeholder = 'Add an it
               <>
                 <span className="flex-1 px-3 py-1.5 bg-bg-warm rounded-lg text-sm">{track}</span>
                 <button onClick={() => startEdit(i)} className="text-xs font-semibold text-text-muted hover:underline">Edit</button>
-                <button onClick={() => removeTrack(i)} className="text-xs font-semibold text-red hover:underline">Remove</button>
+                <span className="w-12 text-center">
+                  {flashIndex === i ? (
+                    <span className="text-xs font-semibold text-red">In use</span>
+                  ) : (
+                    <button onClick={() => removeTrack(i)} className="text-xs font-semibold text-red hover:underline">Remove</button>
+                  )}
+                </span>
               </>
             )}
           </div>

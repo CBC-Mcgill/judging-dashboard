@@ -85,6 +85,6 @@ export interface TeamWithAvg extends Team {
     total: number;
     count: number;
   };
-  activeAwards: string[];
+  activeSubchallenges: string[];
   scores: Score[];
 }

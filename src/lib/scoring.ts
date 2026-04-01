@@ -7,7 +7,7 @@ export const DEFAULT_TRACKS = [
   'Track 4',
 ];
 
-export const DEFAULT_AWARDS = [
+export const DEFAULT_SUBCHALLENGES = [
   'Subchallenge 1',
   'Subchallenge 2',
   'Subchallenge 3',
@@ -78,12 +78,12 @@ export function computeTeamAvg(scores: Score[], criteria: Criterion[]) {
   return { categories, total, count };
 }
 
-export function computeTeamActiveAwards(scores: Score[]): string[] {
-  const allAwards = new Set<string>();
+export function computeTeamActiveSubchallenges(scores: Score[]): string[] {
+  const allSubchallenges = new Set<string>();
   scores.forEach((s) => {
-    s.selected_awards?.forEach((a) => allAwards.add(a));
+    s.selected_awards?.forEach((a) => allSubchallenges.add(a));
   });
-  return Array.from(allAwards);
+  return Array.from(allSubchallenges);
 }
 
 export function buildRankedTeams(teams: Team[], scores: Score[], criteria: Criterion[]): TeamWithAvg[] {
@@ -93,7 +93,7 @@ export function buildRankedTeams(teams: Team[], scores: Score[], criteria: Crite
       return {
         ...team,
         avg: computeTeamAvg(teamScores, criteria),
-        activeAwards: computeTeamActiveAwards(teamScores),
+        activeSubchallenges: computeTeamActiveSubchallenges(teamScores),
         scores: teamScores,
       };
     })
