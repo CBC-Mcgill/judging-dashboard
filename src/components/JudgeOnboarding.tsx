@@ -67,10 +67,6 @@ export default function JudgeOnboarding({ dashboard, judgeName }: JudgeOnboardin
               <li>Click <strong>Save Score</strong></li>
             </ol>
           </div>
-
-          <div className="bg-bg-warm rounded-lg p-4 text-sm text-text-secondary">
-            Your name (<strong>{judgeName}</strong>) will be automatically attached to your scores. If you need to change your name, go to Settings.
-          </div>
         </div>
       </div>
     </div>

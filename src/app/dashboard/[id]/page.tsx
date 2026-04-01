@@ -107,32 +107,19 @@ export default function DashboardPage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const scoreData = {
-      category_scores: score.categoryScores,
-      selected_awards: score.selectedAwards,
-      scored_by: user?.id,
-    };
-
-    const { data: existing } = await supabase
+    const { error } = await supabase
       .from('scores')
-      .select('id')
-      .eq('team_id', score.teamId)
-      .eq('judge_name', score.judgeName)
-      .eq('dashboard_id', dashboardId)
-      .maybeSingle();
-
-    if (existing) {
-      const { error } = await supabase.from('scores').update(scoreData).eq('id', existing.id);
-      if (error) { alert(error.message); return; }
-    } else {
-      const { error } = await supabase.from('scores').insert({
+      .upsert({
         dashboard_id: dashboardId,
         team_id: score.teamId,
         judge_name: score.judgeName,
-        ...scoreData,
+        category_scores: score.categoryScores,
+        selected_awards: score.selectedAwards,
+        scored_by: user?.id,
+      }, {
+        onConflict: 'dashboard_id,team_id,judge_name',
       });
-      if (error) { alert(error.message); return; }
-    }
+    if (error) { alert(error.message); return; }
     loadData();
   }
 

@@ -237,10 +237,10 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
               </div>
             )}
 
-            <div className="mt-4">
+            <div className="mt-4 flex justify-end">
               <button
                 onClick={handleSubmit}
-                className="bg-terracotta text-white px-[22px] py-2.5 rounded-lg text-[13px] font-semibold hover:bg-terracotta/90 transition-colors w-full md:w-auto md:float-right"
+                className="bg-terracotta text-white px-[22px] py-2.5 rounded-lg text-[13px] font-semibold hover:bg-terracotta/90 transition-colors w-full md:w-auto"
               >
                 Save Score
               </button>

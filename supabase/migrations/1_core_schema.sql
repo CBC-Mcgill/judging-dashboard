@@ -45,7 +45,8 @@ create table scores (
   scored_by uuid references auth.users(id),
   category_scores jsonb not null default '{}'::jsonb,
   selected_awards text[] not null default '{}',
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique(dashboard_id, team_id, judge_name)
 );
 
 -- Indexes
@@ -197,15 +198,24 @@ create policy "Judges can view teams"
 
 create policy "Judges can create scores"
   on scores for insert
-  with check (exists(select 1 from dashboard_judges where dashboard_id = scores.dashboard_id and user_id = auth.uid()));
+  with check (
+    exists(select 1 from dashboard_judges where dashboard_id = scores.dashboard_id and user_id = auth.uid())
+    and scored_by = auth.uid()
+  );
 
-create policy "Judges can view scores"
+create policy "Judges can view own scores"
   on scores for select
-  using (exists(select 1 from dashboard_judges where dashboard_id = scores.dashboard_id and user_id = auth.uid()));
+  using (
+    exists(select 1 from dashboard_judges where dashboard_id = scores.dashboard_id and user_id = auth.uid())
+    and scored_by = auth.uid()
+  );
 
-create policy "Judges can update scores"
+create policy "Judges can update own scores"
   on scores for update
-  using (exists(select 1 from dashboard_judges where dashboard_id = scores.dashboard_id and user_id = auth.uid()));
+  using (
+    exists(select 1 from dashboard_judges where dashboard_id = scores.dashboard_id and user_id = auth.uid())
+    and scored_by = auth.uid()
+  );
 
 -- ============================================
 -- Enable Realtime
