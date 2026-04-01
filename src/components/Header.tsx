@@ -130,10 +130,9 @@ export default function Header({ activeTab, onTabChange, dashboardName, onExport
       </header>
 
       {/* Staff mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-[60] md:hidden">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <div className="absolute top-0 left-0 bottom-0 w-[280px] bg-bg-card border-r border-border shadow-lg flex flex-col">
+      <div className={`fixed inset-0 z-[60] md:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+        <div className={`absolute top-0 left-0 bottom-0 w-[280px] bg-bg-card border-r border-border shadow-lg flex flex-col transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             {/* Sidebar header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <span className="font-serif text-base truncate">{dashboardName}</span>
@@ -182,9 +181,8 @@ export default function Header({ activeTab, onTabChange, dashboardName, onExport
                 Sign Out
               </button>
             </div>
-          </div>
         </div>
-      )}
+      </div>
 
       {/* Judge mobile bottom tab bar */}
       {isJudge && (

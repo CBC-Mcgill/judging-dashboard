@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { buildRankedTeams, computeTotal, getCriteriaMaxes } from '@/lib/scoring';
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+  const initialTabSet = useRef(false);
 
   const loadData = useCallback(async () => {
     const supabase = createClient();
@@ -52,9 +53,8 @@ export default function DashboardPage() {
     if (user && dashRes.data) {
       if (dashRes.data.owner_id === user.id) {
         setUserRole('owner');
-        if (!activeTab) setActiveTab('entry');
+        if (!initialTabSet.current) { setActiveTab('entry'); initialTabSet.current = true; }
       } else {
-        // Check if collaborator
         const { data: collab } = await supabase
           .from('dashboard_collaborators')
           .select('id')
@@ -63,17 +63,16 @@ export default function DashboardPage() {
           .maybeSingle();
         if (collab) {
           setUserRole('collaborator');
-          if (!activeTab) setActiveTab('entry');
+          if (!initialTabSet.current) { setActiveTab('entry'); initialTabSet.current = true; }
         } else {
-          // Must be a judge
           setUserRole('judge');
-          if (!activeTab) setActiveTab('onboarding');
+          if (!initialTabSet.current) { setActiveTab('onboarding'); initialTabSet.current = true; }
         }
       }
     }
 
     setLoading(false);
-  }, [dashboardId, activeTab]);
+  }, [dashboardId]);
 
   useEffect(() => { loadData(); }, [loadData]);
 

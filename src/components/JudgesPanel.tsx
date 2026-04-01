@@ -45,11 +45,12 @@ export default function JudgesPanel({ dashboardId, isStaff }: JudgesPanelProps) 
     if (user?.email?.toLowerCase() === email) { setError("You can't invite yourself as a judge"); return; }
     if (judges.some((j) => j.email.toLowerCase() === email)) { setError('This email is already invited'); return; }
 
+    if (!user?.id) return;
     const { error: insertError } = await supabase.from('dashboard_judges').insert({
       dashboard_id: dashboardId,
       email,
       name: email.split('@')[0],
-      invited_by: user?.id,
+      invited_by: user.id,
     });
 
     if (insertError) { setError(insertError.message); return; }

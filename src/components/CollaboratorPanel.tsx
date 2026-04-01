@@ -66,11 +66,12 @@ export default function CollaboratorPanel({ dashboardId, isOwner }: Collaborator
       return;
     }
 
+    if (!user?.id) return;
     const { error: insertError } = await supabase.from('pending_invites').insert({
       dashboard_id: dashboardId,
       email,
       role: 'editor',
-      invited_by: user?.id,
+      invited_by: user.id,
     });
 
     if (insertError) {

@@ -150,7 +150,7 @@ export default function RankingsPanel({ rankedTeams, tracks, criteria }: Ranking
                             {criteria.map((c) => (
                               <div key={c.name} className="flex justify-between text-xs px-2 py-1 bg-bg-warm rounded">
                                 <span className="text-text-muted">{c.name}</span>
-                                <span className="font-mono">{s.category_scores?.[c.name] ?? '--'}/10</span>
+                                <span className="font-mono">{s.category_scores?.[c.name] ?? '--'}/{maxes.get(c.name) || 0}</span>
                               </div>
                             ))}
                           </div>

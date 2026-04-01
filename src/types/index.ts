@@ -1,10 +1,3 @@
-export interface User {
-  id: string;
-  email: string;
-  full_name: string;
-  created_at: string;
-}
-
 export interface Criterion {
   name: string;
   weight: number;
@@ -44,7 +37,7 @@ export interface Score {
   dashboard_id: string;
   team_id: string;
   judge_name: string;
-  scored_by: string;
+  scored_by: string | null;
   category_scores: Record<string, number>;
   selected_awards: string[];
   created_at: string;
