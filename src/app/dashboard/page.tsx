@@ -222,12 +222,12 @@ export default function DashboardListPage() {
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowCreate(false)} />
-          <div className="relative bg-bg-card border border-border rounded-[16px] shadow-lg w-full max-w-[600px] mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-bg-card border border-border rounded-[16px] shadow-lg w-full max-w-[600px] mx-4 max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border">
               <h2 className="font-serif text-xl">Create New Dashboard</h2>
               <button onClick={() => setShowCreate(false)} className="text-text-muted hover:text-text transition-colors"><X size={18} /></button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="text-xs font-semibold text-text-secondary block mb-1.5">Dashboard Name</label>
                 <input
