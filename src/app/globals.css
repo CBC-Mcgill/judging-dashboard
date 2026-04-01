@@ -22,6 +22,13 @@
   --color-bronze: #b87a4b;
   --color-red: #c45454;
 
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
   --font-sans: 'DM Sans', sans-serif;
   --font-serif: 'DM Serif Display', serif;
   --font-mono: 'IBM Plex Mono', monospace;
