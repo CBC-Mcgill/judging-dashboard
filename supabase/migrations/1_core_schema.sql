@@ -12,6 +12,7 @@ create table dashboards (
   tracks text[] not null default '{"Track 1","Track 2","Track 3","Track 4"}',
   awards text[] not null default '{"Subchallenge 1","Subchallenge 2","Subchallenge 3"}',
   criteria jsonb not null default '[{"name":"Criteria 1","weight":25},{"name":"Criteria 2","weight":25},{"name":"Criteria 3","weight":25},{"name":"Criteria 4","weight":25}]'::jsonb,
+  invite_token uuid default null unique,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -100,6 +101,10 @@ create policy "Users can view own dashboards"
     or exists(select 1 from dashboard_judges dj where dj.dashboard_id = dashboards.id and dj.user_id = auth.uid())
   );
 
+create policy "Anyone can look up dashboard by invite token"
+  on dashboards for select
+  using (invite_token is not null and auth.uid() is not null);
+
 create policy "Users can create dashboards"
   on dashboards for insert
   with check (owner_id = auth.uid());
@@ -175,7 +180,10 @@ create policy "Members and judges can view judges"
 
 create policy "Staff can create judges"
   on dashboard_judges for insert
-  with check (is_dashboard_member(dashboard_id, auth.uid()));
+  with check (
+    is_dashboard_member(dashboard_id, auth.uid())
+    or exists(select 1 from dashboards where id = dashboard_id and invite_token is not null)
+  );
 
 create policy "Staff or self can update judges"
   on dashboard_judges for update

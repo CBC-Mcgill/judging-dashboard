@@ -37,6 +37,11 @@ export async function updateSession(request: NextRequest) {
   ) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
+    // Preserve join token so judges can complete invite flow after login
+    if (request.nextUrl.pathname.startsWith('/join/')) {
+      const token = request.nextUrl.pathname.split('/join/')[1];
+      if (token) url.searchParams.set('join', token);
+    }
     return NextResponse.redirect(url);
   }
 

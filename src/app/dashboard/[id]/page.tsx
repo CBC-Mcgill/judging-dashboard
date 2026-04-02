@@ -252,7 +252,7 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'judges' && isStaff && (
-          <JudgesPanel dashboardId={dashboardId} isStaff={isStaff} />
+          <JudgesPanel dashboardId={dashboardId} isStaff={isStaff} inviteToken={dashboard.invite_token} onTokenChange={loadData} />
         )}
 
         {activeTab === 'settings' && isStaff && (

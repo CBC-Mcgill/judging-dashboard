@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const joinToken = searchParams.get('join');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -60,7 +62,7 @@ export default function SignupPage() {
       setError('An account with this email already exists.\nTry signing in instead.');
       setLoading(false);
     } else {
-      router.push('/dashboard');
+      router.push(joinToken ? `/join/${joinToken}` : '/dashboard');
     }
   }
 
@@ -71,6 +73,12 @@ export default function SignupPage() {
           <img src="/icon.svg" alt="Logo" className="w-12 h-12 mx-auto mb-4" />
           <h1 className="font-serif text-2xl">Create Account</h1>
         </div>
+
+        {joinToken && (
+          <div className="bg-terracotta-bg border border-terracotta/20 text-terracotta text-sm px-4 py-3 rounded-lg mb-4 text-center">
+            Create an account to join as a judge
+          </div>
+        )}
 
         <form onSubmit={handleSignup} className="space-y-4">
           {error && (
@@ -116,11 +124,19 @@ export default function SignupPage() {
 
         <p className="text-center text-sm text-text-muted mt-6">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-terracotta font-semibold hover:underline">
+          <Link href={joinToken ? `/auth/login?join=${joinToken}` : '/auth/login'} className="text-terracotta font-semibold hover:underline">
             Sign in
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
   );
 }

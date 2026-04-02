@@ -11,6 +11,7 @@ export interface Dashboard {
   tracks: string[];
   awards: string[];
   criteria: Criterion[];
+  invite_token: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -97,6 +97,19 @@ returns table(user_id uuid, email text, role text) as $$
 $$ language sql security definer;
 
 -- ============================================
+-- RPC: get dashboard owner email
+-- ============================================
+
+create or replace function get_dashboard_owner_email(d_id uuid)
+returns text as $$
+  select u.email
+  from dashboards d
+  join auth.users u on u.id = d.owner_id
+  where d.id = d_id
+    and is_dashboard_member(d_id, auth.uid());
+$$ language sql security definer;
+
+-- ============================================
 -- Judge invite RPCs
 -- ============================================
 
