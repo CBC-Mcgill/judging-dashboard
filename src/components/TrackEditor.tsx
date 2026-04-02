@@ -62,24 +62,23 @@ export default function TrackEditor({ tracks, onChange, placeholder = 'Add an it
       <div>
         <div className="space-y-1 mb-2">
           {tracks.map((track, i) => (
-            <div key={i} className="flex items-center gap-1.5">
+            <div key={i} className="grid grid-cols-[1fr_auto_auto] gap-1.5 items-center">
               {editingIndex === i ? (
                 <>
-                  <input value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} className="flex-1 px-2 py-1 border border-terracotta rounded text-xs focus:outline-none bg-bg-input" autoFocus />
-                  <button onClick={saveEdit} className="text-[10px] font-semibold text-terracotta hover:underline">Save</button>
-                  <button onClick={cancelEdit} className="text-[10px] font-semibold text-text-muted hover:underline">Cancel</button>
+                  <input value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} className="px-2 py-1 border border-terracotta rounded text-xs focus:outline-none bg-bg-input min-w-0" autoFocus />
+                  <button onClick={saveEdit} className="text-center text-[10px] font-semibold text-terracotta hover:underline">Save</button>
+                  <button onClick={cancelEdit} className="text-center text-[10px] font-semibold text-text-muted hover:underline">Cancel</button>
                 </>
               ) : (
                 <>
-                  <span className="flex-1 px-2 py-1 bg-bg-warm rounded text-xs">{track}</span>
-                  <button onClick={() => startEdit(i)} className="text-[10px] font-semibold text-text-muted hover:underline">Edit</button>
-                  <span className="w-10 text-center">
-                    {flashIndex === i ? (
-                      <span className="text-[10px] font-semibold text-red">In use</span>
-                    ) : (
-                      <button onClick={() => removeTrack(i)} className="text-[10px] font-semibold text-red hover:underline">Remove</button>
-                    )}
-                  </span>
+                  <span className="px-2 py-1 bg-bg-warm rounded text-xs border border-transparent min-w-0 truncate">{track}</span>
+                  <button onClick={() => startEdit(i)} className="text-center text-[10px] font-semibold text-text-muted hover:underline">Edit</button>
+                  <button
+                    onClick={() => removeTrack(i)}
+                    className="text-center text-[10px] font-semibold text-red hover:underline"
+                  >
+                    {flashIndex === i ? 'In use' : 'Remove'}
+                  </button>
                 </>
               )}
             </div>
@@ -98,24 +97,23 @@ export default function TrackEditor({ tracks, onChange, placeholder = 'Add an it
     <div>
       <div className="space-y-1.5 mb-3">
         {tracks.map((track, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i} className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
             {editingIndex === i ? (
               <>
-                <input value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} className="flex-1 px-3 py-1.5 border border-terracotta rounded-lg bg-bg-input text-sm focus:outline-none" autoFocus />
-                <button onClick={saveEdit} className="text-xs font-semibold text-terracotta hover:underline">Save</button>
-                <button onClick={cancelEdit} className="text-xs font-semibold text-text-muted hover:underline">Cancel</button>
+                <input value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} className="px-3 py-1.5 border border-terracotta rounded-lg bg-bg-input text-sm focus:outline-none min-w-0" autoFocus />
+                <button onClick={saveEdit} className="text-center text-xs font-semibold text-terracotta hover:underline">Save</button>
+                <button onClick={cancelEdit} className="text-center text-xs font-semibold text-text-muted hover:underline">Cancel</button>
               </>
             ) : (
               <>
-                <span className="flex-1 px-3 py-1.5 bg-bg-warm rounded-lg text-sm">{track}</span>
-                <button onClick={() => startEdit(i)} className="text-xs font-semibold text-text-muted hover:underline">Edit</button>
-                <span className="w-12 text-center">
-                  {flashIndex === i ? (
-                    <span className="text-xs font-semibold text-red">In use</span>
-                  ) : (
-                    <button onClick={() => removeTrack(i)} className="text-xs font-semibold text-red hover:underline">Remove</button>
-                  )}
-                </span>
+                <span className="px-3 py-1.5 bg-bg-warm rounded-lg text-sm border border-transparent min-w-0 truncate">{track}</span>
+                <button onClick={() => startEdit(i)} className="text-center text-xs font-semibold text-text-muted hover:underline">Edit</button>
+                <button
+                  onClick={() => removeTrack(i)}
+                  className="text-center text-xs font-semibold text-red hover:underline"
+                >
+                  {flashIndex === i ? 'In use' : 'Remove'}
+                </button>
               </>
             )}
           </div>

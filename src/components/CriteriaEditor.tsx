@@ -76,7 +76,7 @@ export default function CriteriaEditor({ criteria, onChange, compact = false }: 
                 </>
               ) : (
                 <>
-                  <span className="flex-1 px-2 py-1 bg-bg-warm rounded text-xs flex items-center justify-between">
+                  <span className="flex-1 px-2 py-1 bg-bg-warm rounded text-xs flex items-center justify-between border border-transparent">
                     <span>{c.name}</span>
                     <span className="text-[10px] text-text-muted font-mono">{c.weight} → {getNormalizedPercent(c.weight).toFixed(0)}%</span>
                   </span>
@@ -111,18 +111,18 @@ export default function CriteriaEditor({ criteria, onChange, compact = false }: 
           <div key={i} className="grid grid-cols-[1fr_60px_auto_auto] md:grid-cols-[1fr_80px_auto_auto] gap-2 items-center">
             {editingIndex === i ? (
               <>
-                <input value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} className="px-3 py-1.5 border border-terracotta rounded-lg bg-bg-input text-sm focus:outline-none" placeholder="Name" autoFocus />
-                <input type="number" value={editWeight} onChange={(e) => setEditWeight(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} className="px-3 py-1.5 border border-terracotta rounded-lg bg-bg-input text-sm focus:outline-none text-center" placeholder="Wt" />
-                <button onClick={saveEdit} className="text-xs font-semibold text-terracotta hover:underline">Save</button>
-                <button onClick={cancelEdit} className="text-xs font-semibold text-text-muted hover:underline">Cancel</button>
+                <input value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} className="px-3 py-1.5 border border-terracotta rounded-lg bg-bg-input text-sm focus:outline-none min-w-0" placeholder="Name" autoFocus />
+                <input type="number" value={editWeight} onChange={(e) => setEditWeight(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} className="px-3 py-1.5 border border-terracotta rounded-lg bg-bg-input text-sm focus:outline-none text-center min-w-0" placeholder="Wt" />
+                <button onClick={saveEdit} className="text-xs font-semibold text-terracotta hover:underline text-center">Save</button>
+                <button onClick={cancelEdit} className="text-xs font-semibold text-text-muted hover:underline text-center">Cancel</button>
               </>
             ) : (
               <>
-                <span className="px-3 py-1.5 bg-bg-warm rounded-lg text-sm">{c.name}</span>
-                <span className="text-xs text-text-muted font-mono text-right">{c.weight} → {getNormalizedPercent(c.weight).toFixed(0)}%</span>
-                <button onClick={() => startEdit(i)} className="text-xs font-semibold text-text-muted hover:underline">Edit</button>
+                <span className="px-3 py-1.5 bg-bg-warm rounded-lg text-sm border border-transparent min-w-0 truncate">{c.name}</span>
+                <span className="py-1.5 text-xs text-text-muted font-mono text-right border border-transparent">{c.weight} → {getNormalizedPercent(c.weight).toFixed(0)}%</span>
+                <button onClick={() => startEdit(i)} className="text-xs font-semibold text-text-muted hover:underline text-center">Edit</button>
                 {criteria.length > 1 ? (
-                  <button onClick={() => removeCriterion(i)} className="text-xs font-semibold text-red hover:underline">Remove</button>
+                  <button onClick={() => removeCriterion(i)} className="text-xs font-semibold text-red hover:underline text-center">Remove</button>
                 ) : <span />}
               </>
             )}
