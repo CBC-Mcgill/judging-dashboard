@@ -121,15 +121,15 @@ export default function JudgesPanel({ dashboardId, isStaff, inviteToken, onToken
           </div>
           <div className="p-[22px]">
             {inviteToken ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 px-3.5 py-2.5 border border-border rounded-lg bg-bg-warm overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center gap-2">
+                <div className="min-w-0 flex-1 flex items-center gap-2 px-3.5 py-2.5 border border-border rounded-lg bg-bg-warm overflow-hidden">
                   <Link2 size={14} className="text-text-muted shrink-0" />
                   <span className="text-sm text-text-muted truncate">{window.location.origin}/join/{inviteToken}</span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <button
                     onClick={copyInviteLink}
-                    className="flex-1 md:flex-none flex items-center justify-center gap-1.5 w-auto md:w-[100px] bg-terracotta text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-terracotta/90 transition-colors"
+                    className="flex-1 md:flex-none flex items-center justify-center gap-1.5 md:w-[100px] bg-terracotta text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-terracotta/90 transition-colors"
                   >
                     {linkCopied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
                   </button>
