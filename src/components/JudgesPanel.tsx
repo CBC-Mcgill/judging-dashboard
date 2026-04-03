@@ -32,7 +32,12 @@ export default function JudgesPanel({ dashboardId, isStaff, inviteToken, onToken
     setLoading(false);
   }, [dashboardId]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [loadData]);
 
   const pending = judges.filter((j) => !j.user_id);
   const active = judges.filter((j) => j.user_id);
@@ -72,13 +77,6 @@ export default function JudgesPanel({ dashboardId, isStaff, inviteToken, onToken
     if (judges.some((j) => j.email.toLowerCase() === email)) { setError('This email is already invited'); return; }
 
     if (!user?.id) return;
-
-    // Check if email belongs to a collaborator
-    const { data: collaborators } = await supabase.rpc('get_collaborator_emails', { d_id: dashboardId });
-    if (collaborators?.some((c: { email: string }) => c.email.toLowerCase() === email)) {
-      setError('This person is already a collaborator on this dashboard.');
-      return;
-    }
 
     // Check if email belongs to the dashboard owner
     const { data: ownerCheck } = await supabase.rpc('get_dashboard_owner_email', { d_id: dashboardId });

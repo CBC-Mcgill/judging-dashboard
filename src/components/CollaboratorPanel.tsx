@@ -2,17 +2,20 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { PendingInvite, CollaboratorWithEmail } from '@/types';
+import type { CollaboratorRole, PendingInvite, CollaboratorWithEmail } from '@/types';
 
 interface CollaboratorPanelProps {
   dashboardId: string;
   isOwner: boolean;
+  canInvite: boolean;
+  inviteRole: CollaboratorRole;
 }
 
-export default function CollaboratorPanel({ dashboardId, isOwner }: CollaboratorPanelProps) {
+export default function CollaboratorPanel({ dashboardId, isOwner, canInvite, inviteRole }: CollaboratorPanelProps) {
   const [collaborators, setCollaborators] = useState<CollaboratorWithEmail[]>([]);
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -20,28 +23,37 @@ export default function CollaboratorPanel({ dashboardId, isOwner }: Collaborator
   const loadData = useCallback(async () => {
     const supabase = createClient();
 
-    // Get active collaborators with emails via RPC
-    const { data: collabs } = await supabase.rpc('get_collaborator_emails', { d_id: dashboardId });
+    const [
+      { data: { user } },
+      { data: collabs },
+      { data: pending },
+    ] = await Promise.all([
+      supabase.auth.getUser(),
+      supabase.rpc('get_collaborator_emails', { d_id: dashboardId }),
+      supabase
+        .from('pending_invites')
+        .select('*')
+        .eq('dashboard_id', dashboardId)
+        .order('created_at', { ascending: false }),
+    ]);
 
-    // Get pending invites
-    const { data: pending } = await supabase
-      .from('pending_invites')
-      .select('*')
-      .eq('dashboard_id', dashboardId)
-      .order('created_at', { ascending: false });
-
+    setCurrentUserId(user?.id || null);
     setCollaborators((collabs as CollaboratorWithEmail[]) || []);
     setPendingInvites((pending as PendingInvite[]) || []);
     setLoading(false);
   }, [dashboardId]);
 
   useEffect(() => {
-    loadData();
+    const timeoutId = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [loadData]);
 
   async function handleInvite() {
     setError('');
     setSuccess('');
+    if (!canInvite) { return; }
     const email = inviteEmail.trim().toLowerCase();
 
     if (!email) { setError('Enter an email address'); return; }
@@ -70,7 +82,7 @@ export default function CollaboratorPanel({ dashboardId, isOwner }: Collaborator
     const { error: insertError } = await supabase.from('pending_invites').insert({
       dashboard_id: dashboardId,
       email,
-      role: 'editor',
+      role: inviteRole,
       invited_by: user.id,
     });
 
@@ -107,13 +119,15 @@ export default function CollaboratorPanel({ dashboardId, isOwner }: Collaborator
 
   return (
     <div className="max-w-2xl">
-      {/* Invite form (owner only) */}
-      {isOwner && (
+      {/* Invite form */}
+      {canInvite && (
         <div className="bg-bg-card border border-border rounded-[14px] shadow-sm overflow-hidden mb-5">
           <div className="px-[22px] py-[18px] border-b border-border">
             <h2 className="font-serif text-[17px]">Invite Collaborator</h2>
             <p className="text-xs text-text-muted mt-0.5">
-              They&apos;ll need to sign up with this exact email to get access
+              {inviteRole === 'admin'
+                ? 'They\'ll get the same admin access you have after signing up with this exact email'
+                : 'They\'ll need to sign up with this exact email to get access'}
             </p>
           </div>
           <div className="p-[22px]">
@@ -163,10 +177,15 @@ export default function CollaboratorPanel({ dashboardId, isOwner }: Collaborator
                   </div>
                   <div>
                     <div className="text-sm font-medium">{invite.email}</div>
-                    <div className="text-[11px] text-text-muted">Pending</div>
+                    <div className="flex items-center gap-2 text-[11px] text-text-muted">
+                      <span>Pending</span>
+                      <span className="rounded-full bg-bg-warm px-2 py-0.5 font-semibold text-text-secondary">
+                        {invite.role === 'admin' ? 'Admin' : 'Editor'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                {isOwner && (
+                {(isOwner || invite.invited_by === currentUserId) && (
                   <button
                     onClick={() => revokeInvite(invite.id)}
                     className="text-xs text-red hover:underline"
@@ -184,7 +203,7 @@ export default function CollaboratorPanel({ dashboardId, isOwner }: Collaborator
       <div className="bg-bg-card border border-border rounded-[14px] shadow-sm overflow-hidden">
         <div className="px-[22px] py-[18px] border-b border-border">
           <h2 className="font-serif text-[17px]">Active Collaborators</h2>
-          <p className="text-xs text-text-muted mt-0.5">People who can edit this dashboard</p>
+          <p className="text-xs text-text-muted mt-0.5">Editors can manage the dashboard. Admins are read-only.</p>
         </div>
         <div className="p-[22px]">
           {collaborators.length === 0 ? (
@@ -198,6 +217,11 @@ export default function CollaboratorPanel({ dashboardId, isOwner }: Collaborator
                   </div>
                   <div>
                     <div className="text-sm font-medium">{collab.email}</div>
+                    <div className="mt-0.5">
+                      <span className="rounded-full bg-bg-warm px-2 py-0.5 text-[11px] font-semibold text-text-secondary">
+                        {collab.role === 'admin' ? 'Admin' : 'Editor'}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 {isOwner && (

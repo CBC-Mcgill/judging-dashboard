@@ -16,11 +16,13 @@ export interface Dashboard {
   updated_at: string;
 }
 
+export type CollaboratorRole = 'editor' | 'admin';
+
 export interface DashboardCollaborator {
   id: string;
   dashboard_id: string;
   user_id: string;
-  role: string;
+  role: CollaboratorRole;
   invited_by: string;
   created_at: string;
 }
@@ -48,7 +50,7 @@ export interface PendingInvite {
   id: string;
   dashboard_id: string;
   email: string;
-  role: string;
+  role: CollaboratorRole;
   invited_by: string;
   created_at: string;
 }
@@ -56,7 +58,7 @@ export interface PendingInvite {
 export interface CollaboratorWithEmail {
   user_id: string;
   email: string;
-  role: string;
+  role: CollaboratorRole;
 }
 
 export interface DashboardJudge {
@@ -88,4 +90,33 @@ export interface TeamWithAvg extends Team {
   };
   activeSubchallenges: string[];
   scores: Score[];
+}
+
+export interface ScoreWithZScore extends Score {
+  judgeKey: string;
+  rawTotal: number;
+  zScore: number;
+}
+
+export interface JudgeScoreStats {
+  judgeKey: string;
+  judgeName: string;
+  scoreCount: number;
+  mean: number;
+  standardDeviation: number;
+  min: number;
+  max: number;
+}
+
+export interface TeamWithZScore extends Team {
+  normalized: {
+    average: number | null;
+    count: number;
+  };
+  raw: {
+    average: number | null;
+    count: number;
+  };
+  activeSubchallenges: string[];
+  scores: ScoreWithZScore[];
 }

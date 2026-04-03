@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Criterion, DashboardJudge, Team, Score, UserRole } from '@/types';
 import { getCriteriaMaxes, computeTotal } from '@/lib/scoring';
 import Select from './Select';
@@ -36,22 +36,12 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
   const isJudge = userRole === 'judge';
   const isStaff = userRole === 'owner' || userRole === 'collaborator';
   const activeJudges = judges.filter((j) => j.user_id);
-
-  // Auto-select judge for judge users
-  useEffect(() => {
-    if (isJudge && currentJudge) {
-      setSelectedJudgeId(currentJudge.id);
-    } else if (activeJudges.length > 0 && !selectedJudgeId) {
-      setSelectedJudgeId(activeJudges[0].id);
-    }
-  }, [isJudge, currentJudge, activeJudges, selectedJudgeId]);
-
-  useEffect(() => {
-    if (teams.length > 0 && !teams.find((t) => t.id === teamId)) {
-      setTeamId(teams[0].id);
-      setError('');
-    }
-  }, [teams, teamId]);
+  const effectiveSelectedJudgeId = isJudge
+    ? currentJudge?.id || ''
+    : selectedJudgeId || activeJudges[0]?.id || '';
+  const effectiveTeamId = teams.find((t) => t.id === teamId)
+    ? teamId
+    : teams[0]?.id || '';
 
   const maxes = getCriteriaMaxes(criteria);
   const parsedScores: Record<string, number> = {};
@@ -62,7 +52,6 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
   const total = computeTotal(parsedScores, criteria);
 
   // Filter scores for recent entries
-  const selectedJudge = activeJudges.find((j) => j.id === selectedJudgeId);
   const recentScores = isJudge && currentJudge
     ? [...scores].filter((s) => s.judge_name === currentJudge.name).reverse().slice(0, 15)
     : [...scores].reverse().slice(0, 15);
@@ -76,9 +65,9 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
 
   function handleSubmit() {
     setError('');
-    if (!teamId) { setError('Select a team'); return; }
+    if (!effectiveTeamId) { setError('Select a team'); return; }
 
-    const judge = activeJudges.find((j) => j.id === selectedJudgeId);
+    const judge = activeJudges.find((j) => j.id === effectiveSelectedJudgeId);
     if (!judge) { setError('Select a judge'); return; }
 
     const catScores: Record<string, number> = {};
@@ -90,7 +79,7 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
       catScores[c.name] = v;
     }
 
-    onSubmitScore({ teamId, judgeName: judge.name, categoryScores: catScores, selectedSubchallenges: Array.from(selectedSubchallenges) });
+    onSubmitScore({ teamId: effectiveTeamId, judgeName: judge.name, categoryScores: catScores, selectedSubchallenges: Array.from(selectedSubchallenges) });
     setCategoryInputs({});
     setSelectedSubchallenges(new Set());
   }
@@ -145,7 +134,7 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
               <div>
                 <label className="text-xs font-semibold text-text-secondary block mb-1.5">Team</label>
                 <Select
-                  value={teamId}
+                  value={effectiveTeamId}
                   onChange={(e) => { setTeamId(e.target.value); setError(''); }}
                   className="w-full px-3.5 py-2.5 border border-border rounded-lg bg-bg-input text-sm focus:outline-none focus:border-terracotta"
                 >
@@ -161,7 +150,7 @@ export default function ScoreEntryPanel({ teams, scores, tracks, criteria, avail
                   </div>
                 ) : (
                   <Select
-                    value={selectedJudgeId}
+                    value={effectiveSelectedJudgeId}
                     onChange={(e) => { setSelectedJudgeId(e.target.value); setError(''); }}
                     className="w-full px-3.5 py-2.5 border border-border rounded-lg bg-bg-input text-sm focus:outline-none focus:border-terracotta"
                   >

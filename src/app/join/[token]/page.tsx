@@ -34,18 +34,8 @@ export default function JoinPage() {
         return;
       }
 
-      // If owner or collaborator, just redirect
+      // If owner, just redirect
       if (dashboard.owner_id === user.id) {
-        router.replace(`/dashboard/${dashboard.id}`);
-        return;
-      }
-      const { data: collab } = await supabase
-        .from('dashboard_collaborators')
-        .select('id')
-        .eq('dashboard_id', dashboard.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (collab) {
         router.replace(`/dashboard/${dashboard.id}`);
         return;
       }

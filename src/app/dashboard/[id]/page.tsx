@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { buildRankedTeams, computeTotal, getCriteriaMaxes } from '@/lib/scoring';
-import type { Dashboard, DashboardJudge, Team, Score, UserRole } from '@/types';
+import { buildRankedTeams, buildZScoreRankedTeams, computeTotal, getCriteriaMaxes } from '@/lib/scoring';
+import type { CollaboratorRole, Dashboard, DashboardJudge, Team, Score, UserRole } from '@/types';
 import Header from '@/components/Header';
 import StatsStrip from '@/components/StatsStrip';
 import ScoreEntryPanel from '@/components/ScoreEntryPanel';
@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
+  const [collaboratorRole, setCollaboratorRole] = useState<CollaboratorRole | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
   const initialTabSet = useRef(false);
 
@@ -53,19 +54,22 @@ export default function DashboardPage() {
     if (user && dashRes.data) {
       if (dashRes.data.owner_id === user.id) {
         setUserRole('owner');
+        setCollaboratorRole(null);
         if (!initialTabSet.current) { setActiveTab('entry'); initialTabSet.current = true; }
       } else {
         const { data: collab } = await supabase
           .from('dashboard_collaborators')
-          .select('id')
+          .select('id, role')
           .eq('dashboard_id', dashboardId)
           .eq('user_id', user.id)
           .maybeSingle();
         if (collab) {
           setUserRole('collaborator');
+          setCollaboratorRole(collab.role as CollaboratorRole);
           if (!initialTabSet.current) { setActiveTab('entry'); initialTabSet.current = true; }
         } else {
           setUserRole('judge');
+          setCollaboratorRole(null);
           if (!initialTabSet.current) { setActiveTab('onboarding'); initialTabSet.current = true; }
         }
       }
@@ -74,7 +78,12 @@ export default function DashboardPage() {
     setLoading(false);
   }, [dashboardId]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [loadData]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -210,7 +219,11 @@ export default function DashboardPage() {
 
   const criteria = dashboard.criteria || [];
   const rankedTeams = buildRankedTeams(teams, scores, criteria);
+  const { rankedTeams: normalizedRankedTeams, judgeStats } = buildZScoreRankedTeams(teams, scores, criteria);
   const isOwner = currentUserId === dashboard.owner_id;
+  const canInviteCollaborators = isOwner || collaboratorRole === 'admin';
+  const inviteRole: CollaboratorRole = collaboratorRole === 'admin' ? 'admin' : 'editor';
+  const canViewZScores = isOwner || collaboratorRole === 'admin';
 
   return (
     <div className="min-h-screen">
@@ -240,7 +253,14 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'rankings' && isStaff && (
-          <RankingsPanel rankedTeams={rankedTeams} tracks={dashboard.tracks} criteria={criteria} />
+          <RankingsPanel
+            rankedTeams={rankedTeams}
+            normalizedRankedTeams={normalizedRankedTeams}
+            judgeStats={judgeStats}
+            tracks={dashboard.tracks}
+            criteria={criteria}
+            canViewZScores={canViewZScores}
+          />
         )}
 
         {activeTab === 'detail' && isStaff && (
@@ -248,7 +268,12 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'collaborate' && isStaff && (
-          <CollaboratorPanel dashboardId={dashboardId} isOwner={isOwner} />
+          <CollaboratorPanel
+            dashboardId={dashboardId}
+            isOwner={isOwner}
+            canInvite={canInviteCollaborators}
+            inviteRole={inviteRole}
+          />
         )}
 
         {activeTab === 'judges' && isStaff && (

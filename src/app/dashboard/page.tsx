@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { DEFAULT_TRACKS, DEFAULT_SUBCHALLENGES, DEFAULT_CRITERIA } from '@/lib/scoring';
@@ -27,11 +27,7 @@ export default function DashboardListPage() {
   const [createError, setCreateError] = useState('');
   const [leaveConfirm, setLeaveConfirm] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadDashboards();
-  }, []);
-
-  async function loadDashboards() {
+  const loadDashboards = useCallback(async () => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push('/auth/login'); return; }
@@ -82,7 +78,8 @@ export default function DashboardListPage() {
         .select('*')
         .in('id', ids)
         .order('created_at', { ascending: false });
-      jDashboards = data || [];
+      const sharedIds = new Set(shared.map((dashboard) => dashboard.id));
+      jDashboards = (data || []).filter((dashboard) => !sharedIds.has(dashboard.id) && dashboard.owner_id !== user.id);
     }
 
     setOwnedDashboards(owned || []);
@@ -91,7 +88,14 @@ export default function DashboardListPage() {
     setJudgeInvites(jInvites);
     setJudgeDashboards(jDashboards);
     setLoading(false);
-  }
+  }, [router]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadDashboards();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [loadDashboards]);
 
   async function acceptInvite(inviteId: string) {
     const supabase = createClient();
@@ -318,7 +322,11 @@ export default function DashboardListPage() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-[15px]">{invite.dashboard_name || 'Unknown Dashboard'}</h3>
-                        <p className="text-xs text-text-muted">You&apos;ve been invited to collaborate</p>
+                        <p className="text-xs text-text-muted">
+                          {invite.role === 'admin'
+                            ? 'You\'ve been invited to collaborate as an admin'
+                            : 'You\'ve been invited to collaborate'}
+                        </p>
                       </div>
                     </div>
                     <div className="flex gap-2">
