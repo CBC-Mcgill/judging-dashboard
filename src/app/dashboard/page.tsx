@@ -98,30 +98,34 @@ export default function DashboardListPage() {
   }, [loadDashboards]);
 
   async function acceptInvite(inviteId: string) {
+    setPendingInvites((prev) => prev.filter((i) => i.id !== inviteId));
     const supabase = createClient();
     const { error } = await supabase.rpc('accept_invite', { invite_id: inviteId });
-    if (error) { alert(error.message); return; }
+    if (error) { alert(error.message); }
     loadDashboards();
   }
 
   async function declineInvite(inviteId: string) {
+    setPendingInvites((prev) => prev.filter((i) => i.id !== inviteId));
     const supabase = createClient();
     const { error } = await supabase.rpc('decline_invite', { invite_id: inviteId });
-    if (error) { alert(error.message); return; }
+    if (error) { alert(error.message); }
     loadDashboards();
   }
 
   async function acceptJudgeInvite(judgeId: string) {
+    setJudgeInvites((prev) => prev.filter((i) => i.id !== judgeId));
     const supabase = createClient();
     const { error } = await supabase.rpc('accept_judge_invite', { judge_id: judgeId });
-    if (error) { alert(error.message); return; }
+    if (error) { alert(error.message); }
     loadDashboards();
   }
 
   async function declineJudgeInvite(judgeId: string) {
+    setJudgeInvites((prev) => prev.filter((i) => i.id !== judgeId));
     const supabase = createClient();
     const { error } = await supabase.rpc('decline_judge_invite', { judge_id: judgeId });
-    if (error) { alert(error.message); return; }
+    if (error) { alert(error.message); }
     loadDashboards();
   }
 
