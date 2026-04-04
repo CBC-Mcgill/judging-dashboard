@@ -223,7 +223,7 @@ export default function DashboardPage() {
   const isOwner = currentUserId === dashboard.owner_id;
   const canInviteCollaborators = isOwner || collaboratorRole === 'admin';
   const inviteRole: CollaboratorRole = collaboratorRole === 'admin' ? 'admin' : 'editor';
-  const canViewZScores = isOwner || collaboratorRole === 'admin';
+  const canViewZScores = isStaff;
 
   return (
     <div className="min-h-screen">
